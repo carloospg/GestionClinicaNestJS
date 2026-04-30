@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Modelo de usuarios del sistema
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  password  String   @db.VarChar(255)
+  rol       Rol
+  citas     Cita[]   @relation("CitasMedico")
+}
+
+// Modelo de pacientes
+model Paciente {
+  id               Int       @id @default(autoincrement())
+  nombre           String    @db.VarChar(100)
+  apellidos        String    @db.VarChar(150)
+  dni              String    @unique @db.VarChar(20)
+  telefono         String?   @db.VarChar(20)
+  fecha_nacimiento DateTime? @db.Date
+  citas            Cita[]
+  historial        HistorialClinico?
+}
+
+// Modelo de citas medicas
+model Cita {
+  id           Int         @id @default(autoincrement())
+  id_paciente  Int
+  id_medico    Int
+  fecha_hora   DateTime
+  fecha_inicio DateTime?
+  estado       EstadoCita  @default(pendiente)
+  motivo       String?     @db.VarChar(255)
+  updated_at   DateTime?
+  paciente     Paciente    @relation(fields: [id_paciente], references: [id])
+  medico       Usuario     @relation("CitasMedico", fields: [id_medico], references: [id])
+}
+
+// Modelo de historial clinico (en PostgreSQL en lugar de MongoDB)
+model HistorialClinico {
+  id          Int                @id @default(autoincrement())
+  id_paciente Int                @unique
+  paciente    Paciente           @relation(fields: [id_paciente], references: [id])
+  entradas    EntradaHistorial[]
+}
+
+// Modelo de cada entrada del historial
+model EntradaHistorial {
+  id           Int              @id @default(autoincrement())
+  id_historial Int
+  id_medico    Int
+  fecha        DateTime         @default(now())
+  observaciones String
+  diagnostico  String
+  tratamiento  String
+  historial    HistorialClinico @relation(fields: [id_historial], references: [id])
+}
+
+// Enums
+enum Rol {
+  admin
+  medico
+  recepcionista
+}
+
+enum EstadoCita {
+  pendiente
+  en_curso
+  finalizada
+  cancelada
+}
