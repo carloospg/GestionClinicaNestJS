@@ -39,6 +39,7 @@ export async function renderUsuarios() {
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Rol</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tabla-usuarios"></tbody>
@@ -83,12 +84,52 @@ async function cargarUsuarios(token: string) {
           <td>${u.nombre}</td>
           <td>${u.email}</td>
           <td>${u.rol}</td>
+          <td>
+            ${
+              u.rol !== "admin"
+                ? `
+              <button class="btn btn-danger btn-sm" data-id="${u.id}">
+                <i class="bi bi-trash"></i>
+              </button>
+            `
+                : ""
+            }
+          </td>
         </tr>
       `;
+    });
+
+    tbody.querySelectorAll(".btn-danger").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = (btn as HTMLElement).dataset.id;
+        await eliminarUsuario(token, Number(id));
+      });
     });
   } catch (err) {
     document.getElementById("error-msg")!.textContent =
       "Error al conectar con el servidor";
     document.getElementById("error-msg")!.classList.remove("d-none");
+  }
+}
+
+async function eliminarUsuario(token: string, id: number) {
+  if (!confirm("¿Estas seguro de que quieres eliminar este usuario?")) return;
+
+  try {
+    const response = await fetch(`${API_URL}/usuarios/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await response.json();
+
+    if (!data.ok) {
+      alert(data.message || "Error al eliminar usuario");
+      return;
+    }
+
+    await cargarUsuarios(token);
+  } catch (err) {
+    alert("Error al conectar con el servidor");
   }
 }
