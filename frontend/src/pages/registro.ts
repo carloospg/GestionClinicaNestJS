@@ -79,7 +79,7 @@ export function renderRegistro() {
   });
 
   document.getElementById("btn-volver")!.addEventListener("click", () => {
-    window.dispatchEvent(new CustomEvent("navigate", { detail: "index" }));
+    window.dispatchEvent(new CustomEvent("navigate", { detail: "usuarios" }));
   });
 
   document

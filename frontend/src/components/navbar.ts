@@ -57,4 +57,9 @@ export function initNavbarEvents() {
     e.preventDefault();
     window.dispatchEvent(new CustomEvent('navigate', { detail: 'index' }));
   });
+
+  document.querySelector('[data-page="usuarios"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('navigate', { detail: 'usuarios' }));
+  });
 }

@@ -1,5 +1,6 @@
 import { renderDashboard } from "./pages/dashboard";
 import { renderRegistro } from "./pages/registro";
+import { renderUsuarios } from "./pages/usuarios";
 
 export function initRouter() {
   window.addEventListener("navigate", (e: Event) => {
@@ -12,6 +13,9 @@ export function navigate(page: string) {
   switch (page) {
     case "index":
       renderDashboard();
+      break;
+    case "usuarios":
+      renderUsuarios();
       break;
     case "registro":
       renderRegistro();
