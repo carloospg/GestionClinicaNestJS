@@ -14,21 +14,6 @@ export function renderDashboard() {
           <p class="text-muted">Panel principal</p>
         </div>
       </div>
-
-      ${
-        usuario.rol === "admin"
-          ? `
-        <div class="card shadow mb-3">
-          <div class="card-body">
-            <h5 class="card-title">Acciones rapidas</h5>
-            <button class="btn btn-primary btn-sm" id="btn-registrar">
-              <i class="bi bi-person-plus me-1"></i> Registrar Usuario
-            </button>
-          </div>
-        </div>
-      `
-          : ""
-      }
     </div>
   `;
 
