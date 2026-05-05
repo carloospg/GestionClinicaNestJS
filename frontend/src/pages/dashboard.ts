@@ -1,42 +1,42 @@
+import { renderNavbar, initNavbarEvents } from "../components/navbar";
+
 export function renderDashboard() {
   const app = document.getElementById("app")!;
   const usuario = JSON.parse(sessionStorage.getItem("usuario")!);
 
   app.innerHTML = `
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-      <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="#">
-          <i class="bi bi-hospital me-2"></i>Gestion Clinica
-        </a>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="nav-links">
-          </ul>
-          <div class="dropdown">
-            <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              ${usuario.nombre}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <button class="dropdown-item py-2 text-danger fw-bold" id="btn-logout">
-                  <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesion
-                </button>
-              </li>
-            </ul>
-          </div>
+    <div id="navbar-container">${renderNavbar("index")}</div>
+
+    <div class="container mt-4">
+      <div class="row mb-3">
+        <div class="col">
+          <h4>Bienvenido, ${usuario.nombre}</h4>
+          <p class="text-muted">Panel principal</p>
         </div>
       </div>
-    </nav>
 
-    <div class="container mt-4" id="contenido-principal">
-      <h4>Bienvenido, ${usuario.nombre}</h4>
-      <p class="text-muted">Panel principal</p>
+      ${
+        usuario.rol === "admin"
+          ? `
+        <div class="card shadow mb-3">
+          <div class="card-body">
+            <h5 class="card-title">Acciones rapidas</h5>
+            <button class="btn btn-primary btn-sm" id="btn-registrar">
+              <i class="bi bi-person-plus me-1"></i> Registrar Usuario
+            </button>
+          </div>
+        </div>
+      `
+          : ""
+      }
     </div>
   `;
 
-  document.getElementById("btn-logout")!.addEventListener("click", () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("usuario");
-    window.location.reload();
-  });
+  initNavbarEvents();
+
+  if (usuario.rol === "admin") {
+    document.getElementById("btn-registrar")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "registro" }));
+    });
+  }
 }
