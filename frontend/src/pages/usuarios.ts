@@ -1,6 +1,9 @@
+import { Modal } from "bootstrap";
 import { renderNavbar, initNavbarEvents } from "../components/navbar";
 
 const API_URL = "http://localhost:3000/api";
+
+let usuarioEditandoId: number | null = null;
 
 export async function renderUsuarios() {
   const app = document.getElementById("app")!;
@@ -8,7 +11,7 @@ export async function renderUsuarios() {
   const usuario = JSON.parse(sessionStorage.getItem("usuario")!);
 
   if (usuario.rol !== "admin") {
-    window.dispatchEvent(new CustomEvent("navigate", { detail: "index" }));
+    window.dispatchEvent(new CustomEvent("navigate", { detail: "dashboard" }));
     return;
   }
 
@@ -18,7 +21,7 @@ export async function renderUsuarios() {
     <div class="container mt-4">
       <div class="row mb-3">
         <div class="col">
-          <h4>Gestion de Usuarios</h4>
+          <h4>Gestión de Usuarios</h4>
           <p class="text-muted">Lista de todos los usuarios del sistema</p>
         </div>
         <div class="col-auto">
@@ -47,6 +50,29 @@ export async function renderUsuarios() {
         </div>
       </div>
     </div>
+
+    <div class="modal fade" id="modal-rol" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modificar Rol</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label">Selecciona el nuevo rol</label>
+            <select class="form-select" id="select-rol">
+              <option value="admin">Admin</option>
+              <option value="medico">Médico</option>
+              <option value="recepcionista">Recepcionista</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btn-guardar-rol">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
   initNavbarEvents();
@@ -57,16 +83,49 @@ export async function renderUsuarios() {
       window.dispatchEvent(new CustomEvent("navigate", { detail: "registro" }));
     });
 
+  document
+    .getElementById("btn-guardar-rol")!
+    .addEventListener("click", async () => {
+      const rol = (document.getElementById("select-rol") as HTMLSelectElement)
+        .value;
+
+      try {
+        const res = await fetch(
+          `${API_URL}/usuarios/${usuarioEditandoId}/rol`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ rol }),
+          },
+        );
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert(data.message || "Error al actualizar rol");
+          return;
+        }
+
+        Modal.getInstance(document.getElementById("modal-rol")!)?.hide();
+        await cargarUsuarios(token);
+      } catch {
+        alert("Error al conectar con el servidor");
+      }
+    });
+
   await cargarUsuarios(token);
 }
 
 async function cargarUsuarios(token: string) {
   try {
-    const response = await fetch(`${API_URL}/usuarios`, {
+    const res = await fetch(`${API_URL}/usuarios`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const data = await response.json();
+    const data = await res.json();
 
     if (!data.ok) {
       document.getElementById("error-msg")!.textContent = data.message;
@@ -78,34 +137,47 @@ async function cargarUsuarios(token: string) {
     tbody.innerHTML = "";
 
     data.usuarios.forEach((u: any) => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${u.id}</td>
-          <td>${u.nombre}</td>
-          <td>${u.email}</td>
-          <td>${u.rol}</td>
-          <td>
-            ${
-              u.rol !== "admin"
-                ? `
-              <button class="btn btn-danger btn-sm" data-id="${u.id}">
-                <i class="bi bi-trash"></i>
-              </button>
-            `
-                : ""
-            }
-          </td>
-        </tr>
-      `;
-    });
+      const tr = document.createElement("tr");
 
-    tbody.querySelectorAll(".btn-danger").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = (btn as HTMLElement).dataset.id;
-        await eliminarUsuario(token, Number(id));
+      const tdId = document.createElement("td");
+      tdId.textContent = u.id;
+
+      const tdNombre = document.createElement("td");
+      tdNombre.textContent = u.nombre;
+
+      const tdEmail = document.createElement("td");
+      tdEmail.textContent = u.email;
+
+      const tdRol = document.createElement("td");
+      tdRol.textContent = u.rol;
+
+      const tdAcciones = document.createElement("td");
+
+      const btnEditar = document.createElement("button");
+      btnEditar.className = "btn btn-primary btn-sm me-1";
+      btnEditar.innerHTML = '<i class="bi bi-pencil"></i>';
+      btnEditar.addEventListener("click", () => {
+        usuarioEditandoId = u.id;
+        (document.getElementById("select-rol") as HTMLSelectElement).value =
+          u.rol;
+        new Modal(document.getElementById("modal-rol")!).show();
       });
+      tdAcciones.appendChild(btnEditar);
+
+      if (u.rol !== "admin") {
+        const btnEliminar = document.createElement("button");
+        btnEliminar.className = "btn btn-danger btn-sm";
+        btnEliminar.innerHTML = '<i class="bi bi-trash"></i>';
+        btnEliminar.addEventListener("click", () =>
+          eliminarUsuario(token, u.id),
+        );
+        tdAcciones.appendChild(btnEliminar);
+      }
+
+      tr.append(tdId, tdNombre, tdEmail, tdRol, tdAcciones);
+      tbody.appendChild(tr);
     });
-  } catch (err) {
+  } catch {
     document.getElementById("error-msg")!.textContent =
       "Error al conectar con el servidor";
     document.getElementById("error-msg")!.classList.remove("d-none");
@@ -113,15 +185,15 @@ async function cargarUsuarios(token: string) {
 }
 
 async function eliminarUsuario(token: string, id: number) {
-  if (!confirm("¿Estas seguro de que quieres eliminar este usuario?")) return;
+  if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) return;
 
   try {
-    const response = await fetch(`${API_URL}/usuarios/${id}`, {
+    const res = await fetch(`${API_URL}/usuarios/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const data = await response.json();
+    const data = await res.json();
 
     if (!data.ok) {
       alert(data.message || "Error al eliminar usuario");
@@ -129,7 +201,7 @@ async function eliminarUsuario(token: string, id: number) {
     }
 
     await cargarUsuarios(token);
-  } catch (err) {
+  } catch {
     alert("Error al conectar con el servidor");
   }
 }

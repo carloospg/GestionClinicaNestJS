@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { ActualizarRolDto } from "./dto/actualizar-rol.dto";
 
 @Injectable()
 export class UsuariosService {
@@ -35,5 +36,29 @@ export class UsuariosService {
     await this.prisma.usuario.delete({ where: { id } });
 
     return { ok: true, msg: "Usuario eliminado", usuario };
+  }
+
+  async actualizarRol(id: number, actualizarRolDto: ActualizarRolDto) {
+    const usuario = await this.prisma.usuario.findUnique({ where: { id } });
+
+    if (!usuario) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const usuarioActualizado = await this.prisma.usuario.update({
+      where: {id},
+      data: {rol: actualizarRolDto.rol}
+    })
+
+    return {
+      ok: true,
+      msg: 'Rol actualizado correctamente',
+      usuario: {
+        id: usuarioActualizado.id,
+        nombre: usuarioActualizado.nombre,
+        email: usuarioActualizado.email,
+        rol: usuarioActualizado.rol
+      }
+    }
   }
 }
