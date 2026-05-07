@@ -27,4 +27,10 @@ export class PacientesController {
   eliminar(@Param("id", ParseIntPipe)id: number) {
     return this.pacientesService.eliminar(id)
   }
+
+  @Post("generar/:n")
+  @Roles("admin")
+  generar(@Param("n", ParseIntPipe) n: number) {
+    return this.pacientesService.generarAleatorios(n);
+  }
 }
