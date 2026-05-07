@@ -7,6 +7,8 @@ export async function renderPacientes() {
   const app = document.getElementById("app")!;
   const token = sessionStorage.getItem("token")!;
   const usuario = JSON.parse(sessionStorage.getItem("usuario")!);
+  const esAdmin = usuario.rol === "admin";
+  const hoy = new Date().toISOString().split("T")[0];
 
   if (usuario.rol !== "admin" && usuario.rol !== "recepcionista") {
     window.dispatchEvent(new CustomEvent("navigate", { detail: "dashboard" }));
@@ -42,6 +44,7 @@ export async function renderPacientes() {
                 <th>DNI</th>
                 <th>Teléfono</th>
                 <th>Fecha Nacimiento</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tabla-pacientes"></tbody>
@@ -69,15 +72,17 @@ export async function renderPacientes() {
             </div>
             <div class="mb-3">
               <label class="form-label">DNI</label>
-              <input type="text" class="form-control" id="input-dni" placeholder="12345678A" />
+              <input type="text" class="form-control" id="input-dni"
+                     placeholder="12345678A" maxlength="9" />
             </div>
             <div class="mb-3">
               <label class="form-label">Teléfono</label>
-              <input type="text" class="form-control" id="input-telefono" placeholder="666777888" />
+              <input type="text" class="form-control" id="input-telefono"
+                     placeholder="666777888" maxlength="9" />
             </div>
             <div class="mb-3">
               <label class="form-label">Fecha de Nacimiento</label>
-              <input type="date" class="form-control" id="input-fecha" />
+              <input type="date" class="form-control" id="input-fecha" max="${hoy}" />
             </div>
           </div>
           <div class="modal-footer">
@@ -156,17 +161,17 @@ export async function renderPacientes() {
         }
 
         Modal.getInstance(document.getElementById("modal-paciente")!)?.hide();
-        await cargarPacientes(token);
+        await cargarPacientes(token, esAdmin);
       } catch {
         modalError.textContent = "Error al conectar con el servidor";
         modalError.classList.remove("d-none");
       }
     });
 
-  await cargarPacientes(token);
+  await cargarPacientes(token, esAdmin);
 }
 
-async function cargarPacientes(token: string) {
+async function cargarPacientes(token: string, esAdmin: boolean) {
   try {
     const res = await fetch(`${API_URL}/pacientes`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -186,7 +191,7 @@ async function cargarPacientes(token: string) {
     if (data.pacientes.length === 0) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 6;
+      td.colSpan = 7;
       td.textContent = "No hay pacientes registrados";
       td.className = "text-center text-muted py-3";
       tr.appendChild(td);
@@ -209,11 +214,45 @@ async function cargarPacientes(token: string) {
         },
       );
 
+      const tdAcciones = document.createElement("td");
+      if (esAdmin) {
+        const btnEliminar = document.createElement("button");
+        btnEliminar.className = "btn btn-danger btn-sm";
+        btnEliminar.innerHTML = '<i class="bi bi-trash"></i>';
+        btnEliminar.addEventListener("click", () =>
+          eliminarPaciente(token, p.id, esAdmin),
+        );
+        tdAcciones.appendChild(btnEliminar);
+      }
+      tr.appendChild(tdAcciones);
+
       tbody.appendChild(tr);
     });
   } catch {
     document.getElementById("error-msg")!.textContent =
       "Error al conectar con el servidor";
     document.getElementById("error-msg")!.classList.remove("d-none");
+  }
+}
+
+async function eliminarPaciente(token: string, id: number, esAdmin: boolean) {
+  if (!confirm("¿Estás seguro de que quieres eliminar este paciente?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/pacientes/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.message || "Error al eliminar paciente");
+      return;
+    }
+
+    await cargarPacientes(token, esAdmin);
+  } catch {
+    alert("Error al conectar con el servidor");
   }
 }
