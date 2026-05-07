@@ -21,13 +21,21 @@ export async function renderPacientes() {
     <div class="container mt-4">
       <div class="row mb-3">
         <div class="col">
-          <h4>Gestión de Pacientes</h4>
+          <h4>Gestion de Pacientes</h4>
           <p class="text-muted">Lista de todos los pacientes del sistema</p>
         </div>
-        <div class="col-auto">
-          <button class="btn btn-primary" id="btn-nuevo-paciente">
+        <div class="col-auto gap-2">
+          <button class="btn btn-primary btn-sm" id="btn-nuevo-paciente">
             <i class="bi bi-person-plus me-1"></i> Nuevo Paciente
           </button>
+          ${
+            esAdmin
+              ? `
+          <button class="btn btn-success btn-sm" id="btn-generar-pacientes">
+            <i class="bi bi-people me-1"></i> Generar Pacientes
+          </button>`
+              : ""
+          }
         </div>
       </div>
 
@@ -42,7 +50,7 @@ export async function renderPacientes() {
                 <th>Nombre</th>
                 <th>Apellidos</th>
                 <th>DNI</th>
-                <th>Teléfono</th>
+                <th>Telefono</th>
                 <th>Fecha Nacimiento</th>
                 <th>Acciones</th>
               </tr>
@@ -53,6 +61,7 @@ export async function renderPacientes() {
       </div>
     </div>
 
+    <!-- Modal crear paciente -->
     <div class="modal fade" id="modal-paciente" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -72,13 +81,11 @@ export async function renderPacientes() {
             </div>
             <div class="mb-3">
               <label class="form-label">DNI</label>
-              <input type="text" class="form-control" id="input-dni"
-                     placeholder="12345678A" maxlength="9" />
+              <input type="text" class="form-control" id="input-dni" placeholder="12345678A" maxlength="9" />
             </div>
             <div class="mb-3">
-              <label class="form-label">Teléfono</label>
-              <input type="text" class="form-control" id="input-telefono"
-                     placeholder="666777888" maxlength="9" />
+              <label class="form-label">Telefono</label>
+              <input type="text" class="form-control" id="input-telefono" placeholder="666777888" maxlength="9" />
             </div>
             <div class="mb-3">
               <label class="form-label">Fecha de Nacimiento</label>
@@ -92,6 +99,35 @@ export async function renderPacientes() {
         </div>
       </div>
     </div>
+
+    <!-- Modal generar pacientes -->
+    ${
+      esAdmin
+        ? `
+    <div class="modal fade" id="modal-generar" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Generar Pacientes Aleatorios</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="modal-generar-error" class="alert alert-danger d-none"></div>
+            <div id="modal-generar-success" class="alert alert-success d-none"></div>
+            <div class="mb-3">
+              <label class="form-label">Cantidad de pacientes a generar</label>
+              <input type="number" class="form-control" id="input-cantidad" placeholder="Ej: 10" min="1" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-success" id="btn-confirmar-generar">Generar</button>
+          </div>
+        </div>
+      </div>
+    </div>`
+        : ""
+    }
   `;
 
   initNavbarEvents();
@@ -115,16 +151,15 @@ export async function renderPacientes() {
     .addEventListener("click", async () => {
       const nombre = (
         document.getElementById("input-nombre") as HTMLInputElement
-      ).value.trim();
+      ).value;
       const apellidos = (
         document.getElementById("input-apellidos") as HTMLInputElement
-      ).value.trim();
-      const dni = (
-        document.getElementById("input-dni") as HTMLInputElement
-      ).value.trim();
+      ).value;
+      const dni = (document.getElementById("input-dni") as HTMLInputElement)
+        .value;
       const telefono = (
         document.getElementById("input-telefono") as HTMLInputElement
-      ).value.trim();
+      ).value;
       const fecha_nacimiento = (
         document.getElementById("input-fecha") as HTMLInputElement
       ).value;
@@ -132,6 +167,13 @@ export async function renderPacientes() {
 
       if (!nombre || !apellidos || !dni) {
         modalError.textContent = "Nombre, apellidos y DNI son obligatorios";
+        modalError.classList.remove("d-none");
+        return;
+      }
+
+      if (fecha_nacimiento && fecha_nacimiento > hoy) {
+        modalError.textContent =
+          "La fecha de nacimiento no puede ser posterior a hoy";
         modalError.classList.remove("d-none");
         return;
       }
@@ -147,26 +189,81 @@ export async function renderPacientes() {
             nombre,
             apellidos,
             dni,
-            telefono: telefono || undefined,
-            fecha_nacimiento: fecha_nacimiento || undefined,
+            telefono,
+            fecha_nacimiento,
           }),
         });
 
         const data = await res.json();
 
         if (!data.ok) {
-          modalError.textContent = data.message || "Error al crear paciente";
+          modalError.textContent = data.message;
           modalError.classList.remove("d-none");
           return;
         }
 
         Modal.getInstance(document.getElementById("modal-paciente")!)?.hide();
+        modalError.classList.add("d-none");
         await cargarPacientes(token, esAdmin);
       } catch {
         modalError.textContent = "Error al conectar con el servidor";
         modalError.classList.remove("d-none");
       }
     });
+
+  if (esAdmin) {
+    document
+      .getElementById("btn-generar-pacientes")!
+      .addEventListener("click", () => {
+        (document.getElementById("input-cantidad") as HTMLInputElement).value =
+          "";
+        document.getElementById("modal-generar-error")!.classList.add("d-none");
+        document
+          .getElementById("modal-generar-success")!
+          .classList.add("d-none");
+        new Modal(document.getElementById("modal-generar")!).show();
+      });
+
+    document
+      .getElementById("btn-confirmar-generar")!
+      .addEventListener("click", async () => {
+        const cantidad = (
+          document.getElementById("input-cantidad") as HTMLInputElement
+        ).value;
+        const modalError = document.getElementById("modal-generar-error")!;
+        const modalSuccess = document.getElementById("modal-generar-success")!;
+
+        if (!cantidad || Number(cantidad) <= 0) {
+          modalError.textContent = "Introduce una cantidad valida";
+          modalError.classList.remove("d-none");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/pacientes/generar/${cantidad}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const data = await res.json();
+
+          if (!data.ok) {
+            modalError.textContent = data.message;
+            modalError.classList.remove("d-none");
+            modalSuccess.classList.add("d-none");
+            return;
+          }
+
+          modalSuccess.textContent = `${cantidad} pacientes generados correctamente`;
+          modalSuccess.classList.remove("d-none");
+          modalError.classList.add("d-none");
+          await cargarPacientes(token, esAdmin);
+        } catch {
+          modalError.textContent = "Error al conectar con el servidor";
+          modalError.classList.remove("d-none");
+        }
+      });
+  }
 
   await cargarPacientes(token, esAdmin);
 }
@@ -236,7 +333,7 @@ async function cargarPacientes(token: string, esAdmin: boolean) {
 }
 
 async function eliminarPaciente(token: string, id: number, esAdmin: boolean) {
-  if (!confirm("¿Estás seguro de que quieres eliminar este paciente?")) return;
+  if (!confirm("¿Estas seguro de que quieres eliminar este paciente?")) return;
 
   try {
     const res = await fetch(`${API_URL}/pacientes/${id}`, {
@@ -247,7 +344,7 @@ async function eliminarPaciente(token: string, id: number, esAdmin: boolean) {
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.message || "Error al eliminar paciente");
+      alert(data.message);
       return;
     }
 
