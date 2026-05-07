@@ -1,4 +1,8 @@
-import { Injectable, ConflictException } from "@nestjs/common";
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CrearPacienteDto } from "./dto/crear-paciente.dto";
 
@@ -33,5 +37,21 @@ export class PacientesService {
       },
     });
     return { ok: true, paciente };
+  }
+
+  async eliminar(id: number) {
+    const paciente = await this.prisma.paciente.findUnique({ where: { id } });
+    if (!paciente) {
+      throw new NotFoundException({
+        ok: false,
+        message: "Paciente no encontrado",
+      });
+    }
+
+    await this.prisma.paciente.delete({ where: { id } });
+    return {
+      ok: true,
+      message: "Paciente eliminado correctamente",
+    };
   }
 }

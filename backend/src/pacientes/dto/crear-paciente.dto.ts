@@ -10,12 +10,12 @@ export class CrearPacienteDto {
   apellidos: string;
 
   @IsString()
-  @MaxLength(20)
+  @MaxLength(9)
   dni: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(20)
+  @MaxLength(9)
   telefono?: string;
 
   @IsOptional()
