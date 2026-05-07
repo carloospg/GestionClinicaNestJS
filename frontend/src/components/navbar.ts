@@ -23,7 +23,7 @@ export function renderNavbar(paginaActiva: string) {
   `
       : "";
 
-  const navbarHTML = `
+  return `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
         <a class="navbar-brand fw-bold" href="#" data-page="index">
@@ -37,15 +37,15 @@ export function renderNavbar(paginaActiva: string) {
             ${linkUsuarios}
             ${linkPacientes}
           </ul>
-          <div class="dropdown">
-            <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              ${usuario.nombre}
+          <div class="position-relative">
+            <button class="btn btn-light" id="btn-usuario-nav">
+              ${usuario.nombre} <i class="bi bi-chevron-down ms-1"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-              <li><hr class="dropdown-divider"></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 position-absolute end-0"
+                id="menu-usuario" style="display:none; min-width: 160px;">
               <li>
                 <button class="dropdown-item py-2 text-danger fw-bold" id="btn-logout-nav">
-                  <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesion
+                  <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
                 </button>
               </li>
             </ul>
@@ -54,11 +54,22 @@ export function renderNavbar(paginaActiva: string) {
       </div>
     </nav>
   `;
-
-  return navbarHTML;
 }
 
 export function initNavbarEvents() {
+  const btnUsuario = document.getElementById("btn-usuario-nav");
+  const menuUsuario = document.getElementById("menu-usuario");
+
+  btnUsuario?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const visible = menuUsuario!.style.display === "block";
+    menuUsuario!.style.display = visible ? "none" : "block";
+  });
+
+  document.addEventListener("click", () => {
+    if (menuUsuario) menuUsuario.style.display = "none";
+  });
+
   document.getElementById("btn-logout-nav")?.addEventListener("click", () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("usuario");

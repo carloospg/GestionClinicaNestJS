@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, ParseIntPipe, Delete, Param } from "@nestjs/common";
 import { PacientesService } from "./pacientes.service";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { RolesGuard } from "../guards/roles.guard";
@@ -20,5 +20,11 @@ export class PacientesController {
   @Roles("admin", "recepcionista")
   crear(@Body() dto: CrearPacienteDto) {
     return this.pacientesService.crear(dto);
+  }
+
+  @Delete(":id")
+  @Roles("admin")
+  eliminar(@Param("id", ParseIntPipe)id: number) {
+    return this.pacientesService.eliminar(id)
   }
 }
