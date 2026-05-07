@@ -1,4 +1,5 @@
 import { renderDashboard } from "./pages/dashboard";
+import { renderPacientes } from "./pages/pacientes";
 import { renderRegistro } from "./pages/registro";
 import { renderUsuarios } from "./pages/usuarios";
 
@@ -19,6 +20,9 @@ export function navigate(page: string) {
       break;
     case "registro":
       renderRegistro();
+      break;
+    case "pacientes":
+      renderPacientes();
       break;
     default:
       renderDashboard();

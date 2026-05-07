@@ -12,6 +12,17 @@ export function renderNavbar(paginaActiva: string) {
   `
       : "";
 
+  const linkPacientes =
+    usuario.rol === "admin" || usuario.rol === "recepcionista"
+      ? `
+    <li class="nav-item">
+      <a class="nav-link ${paginaActiva === "pacientes" ? "active" : ""}" href="#" data-page="pacientes">
+        <i class="bi bi-person-vcard me-1"></i> Pacientes
+      </a>
+    </li>
+  `
+      : "";
+
   const navbarHTML = `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
@@ -24,6 +35,7 @@ export function renderNavbar(paginaActiva: string) {
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             ${linkUsuarios}
+            ${linkPacientes}
           </ul>
           <div class="dropdown">
             <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -47,19 +59,32 @@ export function renderNavbar(paginaActiva: string) {
 }
 
 export function initNavbarEvents() {
-  document.getElementById('btn-logout-nav')?.addEventListener('click', () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('usuario');
+  document.getElementById("btn-logout-nav")?.addEventListener("click", () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("usuario");
     window.location.reload();
   });
 
-  document.querySelector('[data-page="index"]')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.dispatchEvent(new CustomEvent('navigate', { detail: 'index' }));
-  });
+  document
+    .querySelector('[data-page="index"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "index" }));
+    });
 
-  document.querySelector('[data-page="usuarios"]')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.dispatchEvent(new CustomEvent('navigate', { detail: 'usuarios' }));
-  });
+  document
+    .querySelector('[data-page="usuarios"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "usuarios" }));
+    });
+
+  document
+    .querySelector('[data-page="pacientes"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(
+        new CustomEvent("navigate", { detail: "pacientes" }),
+      );
+    });
 }
