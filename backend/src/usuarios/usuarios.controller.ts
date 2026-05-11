@@ -16,6 +16,12 @@ export class UsuariosController {
     return this.usuariosService.listarUsuarios();
   }
 
+  @Get("medicos")
+  @Roles("admin", "recepcionista")
+  listarMedicos() {
+    return this.usuariosService.listarMedicos();
+  }
+
   @Delete(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
