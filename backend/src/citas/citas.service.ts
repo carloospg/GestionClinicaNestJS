@@ -40,4 +40,26 @@ export class CitasService {
 
     return { ok: true, message: "Cita creada correctamente", cita };
   }
+
+  async listarTodas() {
+    const citas = await this.prisma.cita.findMany({
+      orderBy: { id: "asc" },
+      include: {
+        paciente: { select: { nombre: true, apellidos: true } },
+        medico: { select: { nombre: true } },
+      },
+    });
+    return { ok: true, citas };
+  }
+
+  async listarMisCitas(id_medico: number) {
+    const citas = await this.prisma.cita.findMany({
+      where: { id_medico },
+      orderBy: { id: "asc" },
+      include: {
+        paciente: { select: { nombre: true, apellidos: true } },
+      },
+    });
+    return { ok: true, citas };
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from "@nestjs/common";
+import { Controller, Post, Body, UseGuards, Get, Request } from "@nestjs/common";
 import { CitasService } from "./citas.service";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { RolesGuard } from "../guards/roles.guard";
@@ -14,5 +14,17 @@ export class CitasController {
   @Roles("admin", "recepcionista")
   crear(@Body() dto: CrearCitaDto) {
     return this.citasService.crear(dto);
+  }
+
+  @Get()
+  @Roles("admin", "recepcionista")
+  listarTodas() {
+    return this.citasService.listarTodas();
+  }
+
+  @Get("mis-citas")
+  @Roles("medico")
+  listarMisCitas(@Request() req: any) {
+    return this.citasService.listarMisCitas(req.user.id);
   }
 }
