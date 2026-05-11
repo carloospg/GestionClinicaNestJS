@@ -20,6 +20,15 @@ export class UsuariosService {
     return { ok: true, usuarios };
   }
 
+  async listarMedicos() {
+    const medicos = await this.prisma.usuario.findMany({
+      where: { rol: "medico" },
+      select: { id: true, nombre: true, email: true},
+      orderBy: { nombre: "asc" },
+    });
+    return {ok: true, medicos };
+  }
+
   async eliminarUsuario(id: number) {
     const usuario = await this.prisma.usuario.findUnique({
       where: { id },

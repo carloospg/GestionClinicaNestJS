@@ -23,6 +23,17 @@ export function renderNavbar(paginaActiva: string) {
   `
       : "";
 
+  const linkCitas =
+    usuario.rol === "admin" || usuario.rol === "recepcionista"
+      ? `
+  <li class="nav-item">
+    <a class="nav-link ${paginaActiva === "citas" ? "active" : ""}" href="#" data-page="citas">
+      <i class="bi bi-calendar-check me-1"></i> Citas
+    </a>
+  </li>
+`
+      : "";
+
   return `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
@@ -36,6 +47,7 @@ export function renderNavbar(paginaActiva: string) {
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             ${linkUsuarios}
             ${linkPacientes}
+            ${linkCitas}
           </ul>
           <div class="position-relative">
             <button class="btn btn-light" id="btn-usuario-nav">
@@ -97,5 +109,12 @@ export function initNavbarEvents() {
       window.dispatchEvent(
         new CustomEvent("navigate", { detail: "pacientes" }),
       );
+    });
+
+  document
+    .querySelector('[data-page="citas"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "citas" }));
     });
 }
