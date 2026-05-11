@@ -3,6 +3,7 @@ import { renderPacientes } from "./pages/pacientes";
 import { renderRegistro } from "./pages/registro";
 import { renderUsuarios } from "./pages/usuarios";
 import { renderCitas } from "./pages/citas";
+import { renderMisCitas } from "./pages/misCitas";
 
 export function initRouter() {
   window.addEventListener("navigate", (e: Event) => {
@@ -27,6 +28,9 @@ export function navigate(page: string) {
       break;
     case "citas":
       renderCitas();
+      break;
+    case "misCitas":
+      renderMisCitas()
       break;
     default:
       renderDashboard();
