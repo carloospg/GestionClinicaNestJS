@@ -34,6 +34,17 @@ export function renderNavbar(paginaActiva: string) {
 `
       : "";
 
+  const linkMisCitas =
+    usuario.rol === "medico"
+      ? `
+  <li class="nav-item">
+    <a class="nav-link ${paginaActiva === "misCitas" ? "active" : ""}" href="#" data-page="misCitas">
+      <i class="bi bi-calendar2-check me-1"></i> Mis Citas
+    </a>
+  </li>
+`
+      : "";
+
   return `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
@@ -48,6 +59,7 @@ export function renderNavbar(paginaActiva: string) {
             ${linkUsuarios}
             ${linkPacientes}
             ${linkCitas}
+            ${linkMisCitas} 
           </ul>
           <div class="position-relative">
             <button class="btn btn-light" id="btn-usuario-nav">
@@ -116,5 +128,12 @@ export function initNavbarEvents() {
     ?.addEventListener("click", (e) => {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent("navigate", { detail: "citas" }));
+    });
+
+  document
+    .querySelector('[data-page="misCitas"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "misCitas" }));
     });
 }

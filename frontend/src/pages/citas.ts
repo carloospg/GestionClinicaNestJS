@@ -20,7 +20,7 @@ export async function renderCitas() {
       <div class="row mb-3">
         <div class="col">
           <h4>Gestión de Citas</h4>
-          <p class="text-muted">Citas médicas del sistema</p>
+          <p class="text-muted">Lista de todas las citas del sistema</p>
         </div>
         <div class="col-auto">
           <button class="btn btn-primary btn-sm" id="btn-nueva-cita">
@@ -30,7 +30,24 @@ export async function renderCitas() {
       </div>
 
       <div id="error-msg" class="alert alert-danger d-none"></div>
-      <div id="success-msg" class="alert alert-success d-none"></div>
+
+      <div class="card shadow">
+        <div class="card-body">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Paciente</th>
+                <th>Médico</th>
+                <th>Fecha y Hora</th>
+                <th>Motivo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-citas"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Modal nueva cita -->
@@ -133,15 +150,71 @@ export async function renderCitas() {
         }
 
         Modal.getInstance(document.getElementById("modal-cita")!)?.hide();
-        const successMsg = document.getElementById("success-msg")!;
-        successMsg.textContent = "Cita creada correctamente";
-        successMsg.classList.remove("d-none");
-        setTimeout(() => successMsg.classList.add("d-none"), 3000);
+        await cargarCitas(token);
       } catch {
         modalError.textContent = "Error al conectar con el servidor";
         modalError.classList.remove("d-none");
       }
     });
+
+  await cargarCitas(token);
+}
+
+async function cargarCitas(token: string) {
+  try {
+    const res = await fetch(`${API_URL}/citas`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      document.getElementById("error-msg")!.textContent = data.message;
+      document.getElementById("error-msg")!.classList.remove("d-none");
+      return;
+    }
+
+    const tbody = document.getElementById("tabla-citas")!;
+    tbody.innerHTML = "";
+
+    if (data.citas.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 6;
+      td.textContent = "No hay citas registradas";
+      td.className = "text-center text-muted py-3";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    data.citas.forEach((c: any) => {
+      const tr = document.createElement("tr");
+
+      const fecha = new Date(c.fecha_hora).toLocaleString("es-ES");
+      const paciente = `${c.paciente.nombre} ${c.paciente.apellidos}`;
+      const medico = c.medico.nombre;
+
+      [c.id, paciente, medico, fecha, c.motivo || "-"].forEach((val) => {
+        const td = document.createElement("td");
+        td.textContent = String(val);
+        tr.appendChild(td);
+      });
+
+      const tdEstado = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.className = `badge bg-${getBadgeColor(c.estado)}`;
+      badge.textContent = c.estado;
+      tdEstado.appendChild(badge);
+      tr.appendChild(tdEstado);
+
+      tbody.appendChild(tr);
+    });
+  } catch {
+    document.getElementById("error-msg")!.textContent =
+      "Error al conectar con el servidor";
+    document.getElementById("error-msg")!.classList.remove("d-none");
+  }
 }
 
 async function cargarSelectores(token: string) {
@@ -189,5 +262,20 @@ async function cargarSelectores(token: string) {
     }
   } catch {
     console.error("Error al cargar selectores");
+  }
+}
+
+function getBadgeColor(estado: string): string {
+  switch (estado) {
+    case "pendiente":
+      return "warning";
+    case "en_curso":
+      return "primary";
+    case "finalizada":
+      return "success";
+    case "cancelada":
+      return "danger";
+    default:
+      return "secondary";
   }
 }
