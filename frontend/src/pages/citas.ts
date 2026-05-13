@@ -42,6 +42,7 @@ export async function renderCitas() {
                 <th>Fecha y Hora</th>
                 <th>Motivo</th>
                 <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tabla-citas"></tbody>
@@ -180,7 +181,7 @@ async function cargarCitas(token: string) {
     if (data.citas.length === 0) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 6;
+      td.colSpan = 7;
       td.textContent = "No hay citas registradas";
       td.className = "text-center text-muted py-3";
       tr.appendChild(td);
@@ -208,12 +209,44 @@ async function cargarCitas(token: string) {
       tdEstado.appendChild(badge);
       tr.appendChild(tdEstado);
 
+      const tdAcciones = document.createElement("td");
+      if (c.estado === "pendiente") {
+        const btnCancelar = document.createElement("button");
+        btnCancelar.className = "btn btn-danger btn-sm";
+        btnCancelar.innerHTML = '<i class="bi bi-x-circle"></i>';
+        btnCancelar.addEventListener("click", () => cancelarCita(token, c.id));
+        tdAcciones.appendChild(btnCancelar);
+      }
+      tr.appendChild(tdAcciones);
+
       tbody.appendChild(tr);
     });
   } catch {
     document.getElementById("error-msg")!.textContent =
       "Error al conectar con el servidor";
     document.getElementById("error-msg")!.classList.remove("d-none");
+  }
+}
+
+async function cancelarCita(token: string, id: number) {
+  if (!confirm("¿Estás seguro de que quieres cancelar esta cita?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/citas/${id}/cancelar`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.message || "Error al cancelar la cita");
+      return;
+    }
+
+    await cargarCitas(token);
+  } catch {
+    alert("Error al conectar con el servidor");
   }
 }
 
