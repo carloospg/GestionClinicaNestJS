@@ -4,6 +4,7 @@ import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 import { RolesGuard } from "../guards/roles.guard";
 import { Roles } from "../decorators/roles.decorator";
 import { CrearCitaDto } from "./dto/crear-cita.dto";
+import { CambiarEstadoDto } from "./dto/cambiar-estado.dto";
 
 @Controller("api/citas")
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,5 +33,15 @@ export class CitasController {
   @Roles("admin", "recepcionista")
   cancelar(@Param("id", ParseIntPipe) id: number) {
     return this.citasService.cancelar(id)
+  }
+
+  @Patch(":id/estado")
+  @Roles("medico")
+  cambiarEstado(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: CambiarEstadoDto,
+    @Request() req: any,
+  ) {
+    return this.citasService.cambiarEstado(id, req.user.id, dto);
   }
 }
