@@ -45,6 +45,17 @@ export function renderNavbar(paginaActiva: string) {
 `
       : "";
 
+  const linkHistorial =
+    usuario.rol === "medico" || usuario.rol === "admin"
+      ? `
+  <li class="nav-item">
+    <a class="nav-link ${paginaActiva === "historial" ? "active" : ""}" href="#" data-page="historial">
+      <i class="bi bi-clipboard2-pulse me-1"></i> Historial
+    </a>
+  </li>
+`
+      : "";
+
   return `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
@@ -60,6 +71,7 @@ export function renderNavbar(paginaActiva: string) {
             ${linkPacientes}
             ${linkCitas}
             ${linkMisCitas} 
+            ${linkHistorial}
           </ul>
           <div class="position-relative">
             <button class="btn btn-light" id="btn-usuario-nav">
@@ -135,5 +147,14 @@ export function initNavbarEvents() {
     ?.addEventListener("click", (e) => {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent("navigate", { detail: "misCitas" }));
+    });
+
+  document
+    .querySelector('[data-page="historial"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(
+        new CustomEvent("navigate", { detail: "historial" }),
+      );
     });
 }
