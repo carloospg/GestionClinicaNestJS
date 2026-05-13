@@ -2,9 +2,11 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CrearCitaDto } from "./dto/crear-cita.dto";
+import { CambiarEstadoDto } from "./dto/cambiar-estado.dto";
 
 @Injectable()
 export class CitasService {
@@ -85,6 +87,66 @@ export class CitasService {
     return {
       ok: true,
       message: "Cita cancelada correctamente",
+      cita: citaActualizada,
+    };
+  }
+
+  async cambiarEstado(id: number, id_medico: number, dto: CambiarEstadoDto) {
+    const cita = await this.prisma.cita.findUnique({ where: { id } });
+
+    if (!cita) {
+      throw new NotFoundException({ ok: false, message: "Cita no encontrada" });
+    }
+
+    if (cita.id_medico !== id_medico) {
+      throw new ForbiddenException({
+        ok: false,
+        message: "No tienes permiso para modificar esta cita",
+      });
+    }
+
+    const citaActualizada = await this.prisma.cita.update({
+      where: { id },
+      data: {
+        estado: dto.estado as any,
+        updated_at: new Date(),
+        ...(dto.estado === "en_curso" && { fecha_inicio: new Date() }),
+      },
+    });
+
+    if (dto.estado === "finalizada") {
+      if (!dto.observaciones || !dto.diagnostico || !dto.tratamiento) {
+        throw new BadRequestException({
+          ok: false,
+          message:
+            "Observaciones, diagnostico y tratamiento son obligatorios al finalizar",
+        });
+      }
+
+      let historial = await this.prisma.historialClinico.findUnique({
+        where: { id_paciente: cita.id_paciente },
+      });
+
+      if (!historial) {
+        historial = await this.prisma.historialClinico.create({
+          data: { id_paciente: cita.id_paciente },
+        });
+      }
+
+      await this.prisma.entradaHistorial.create({
+        data: {
+          id_historial: historial.id,
+          id_medico,
+          observaciones: dto.observaciones,
+          diagnostico: dto.diagnostico,
+          tratamiento: dto.tratamiento,
+        },
+      });
+    }
+
+    return {
+      ok: true,
+      message: "Estado de la cita actualizado",
       cita: citaActualizada,
     };
   }
