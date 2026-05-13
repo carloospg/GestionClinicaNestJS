@@ -11,7 +11,7 @@ export class PacientesController {
   constructor(private readonly pacientesService: PacientesService) {}
 
   @Get()
-  @Roles("admin", "recepcionista")
+  @Roles("admin", "recepcionista", "medico")
   listar() {
     return this.pacientesService.listar();
   }
