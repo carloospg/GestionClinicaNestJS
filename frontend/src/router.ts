@@ -4,6 +4,7 @@ import { renderRegistro } from "./pages/registro";
 import { renderUsuarios } from "./pages/usuarios";
 import { renderCitas } from "./pages/citas";
 import { renderMisCitas } from "./pages/misCitas";
+import { renderHistorial } from "./pages/historial";
 
 export function initRouter() {
   window.addEventListener("navigate", (e: Event) => {
@@ -31,6 +32,9 @@ export function navigate(page: string) {
       break;
     case "misCitas":
       renderMisCitas()
+      break;
+    case "historial":
+      renderHistorial();
       break;
     default:
       renderDashboard();
