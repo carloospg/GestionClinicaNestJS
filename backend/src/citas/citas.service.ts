@@ -62,4 +62,30 @@ export class CitasService {
     });
     return { ok: true, citas };
   }
+
+  async cancelar(id: number) {
+    const cita = await this.prisma.cita.findUnique({ where: { id } });
+
+    if (!cita) {
+      throw new NotFoundException({ ok: false, message: "Cita no encontrada" });
+    }
+
+    if (cita.estado !== "pendiente") {
+      throw new BadRequestException({
+        ok: false,
+        message: "Solo se pueden cancelar citas que esten pendientes",
+      });
+    }
+
+    const citaActualizada = await this.prisma.cita.update({
+      where: { id },
+      data: { estado: "cancelada", updated_at: new Date() },
+    });
+
+    return {
+      ok: true,
+      message: "Cita cancelada correctamente",
+      cita: citaActualizada,
+    };
+  }
 }
