@@ -25,8 +25,8 @@ export class CitasController {
 
   @Get("stats/finalizadas")
   @Roles("admin", "medico")
-  citasFinalizadasPorMedico() {
-    return this.citasService.citasFinalizadasPorMedico();
+  citasFinalizadasPorMedico(@Request() req: any) {
+    return this.citasService.citasFinalizadasPorMedico(req.user.id, req.user.rol);
   }
 
   @Get("mis-citas")
