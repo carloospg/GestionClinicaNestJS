@@ -199,4 +199,40 @@ export class CitasService {
 
     return { ok: true, citas };
   }
+
+  async duracionPromedio(id_usuario: number, rol: string) {
+    const citas = await this.prisma.cita.findMany({
+      where: {
+        estado: "finalizada",
+        fecha_inicio: { not: null },
+        updated_at: { not: null },
+        ...(rol === "medico" && { id_medico: id_usuario }),
+      },
+      select: {
+        id_medico: true,
+        fecha_inicio: true,
+        updated_at: true,
+        medico: { select: { nombre: true } },
+      },
+    });
+    const agrupado: Record<number, { nombre: string; duraciones: number[] }> =
+      {};
+
+    citas.forEach((c) => {
+      const duracion =
+        (c.updated_at!.getTime() - c.fecha_inicio!.getTime()) / 60000;
+      if (!agrupado[c.id_medico]) {
+        agrupado[c.id_medico] = { nombre: c.medico.nombre, duraciones: [] };
+      }
+      agrupado[c.id_medico].duraciones.push(duracion);
+    });
+
+    const datos = Object.values(agrupado).map((m) => ({
+      medico: m.nombre,
+      promedio_minutos: Math.round(
+        m.duraciones.reduce((a, b) => a + b, 0) / m.duraciones.length,
+      ),
+    }));
+    return { ok: true, datos };
+  }
 }
