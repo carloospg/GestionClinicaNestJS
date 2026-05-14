@@ -150,4 +150,30 @@ export class CitasService {
       cita: citaActualizada,
     };
   }
+
+  async citasFinalizadasPorMedico(id_usuario: number, rol: string) {
+    const where = {
+      estado: "finalizada" as const,
+      ...(rol === "medico" && { id_medico: id_usuario }),
+    };
+    const resultado = await this.prisma.cita.groupBy({
+      by: ["id_medico"],
+      where: { estado: "finalizada" },
+      _count: { id: true },
+    });
+
+    const conNombres = await Promise.all(
+      resultado.map(async (r) => {
+        const medico = await this.prisma.usuario.findUnique({
+          where: { id: r.id_medico },
+          select: { nombre: true },
+        });
+        return {
+          medico: medico?.nombre ?? "desconocido",
+          total: r._count.id,
+        };
+      }),
+    );
+    return { ok: true, datos: conNombres };
+  }
 }

@@ -23,6 +23,12 @@ export class CitasController {
     return this.citasService.listarTodas();
   }
 
+  @Get("stats/finalizadas")
+  @Roles("admin", "medico")
+  citasFinalizadasPorMedico() {
+    return this.citasService.citasFinalizadasPorMedico();
+  }
+
   @Get("mis-citas")
   @Roles("medico")
   listarMisCitas(@Request() req: any) {
