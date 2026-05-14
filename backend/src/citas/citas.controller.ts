@@ -50,4 +50,10 @@ export class CitasController {
   ) {
     return this.citasService.cambiarEstado(id, req.user.id, dto);
   }
+
+  @Get("stats/pendientes-hoy")
+  @Roles("admin", "medico")
+  citasPendientesHoy(@Request() req: any) {
+    return this.citasService.citasPendientesHoy(req.user.id, req.user.rol);
+  }
 }

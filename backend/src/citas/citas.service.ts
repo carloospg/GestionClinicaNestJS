@@ -176,4 +176,27 @@ export class CitasService {
     );
     return { ok: true, datos: conNombres };
   }
+
+  async citasPendientesHoy(id_usuario: number, rol: string) {
+    const hoyInicio = new Date();
+    hoyInicio.setHours(0, 0, 0, 0);
+
+    const hoyFin = new Date();
+    hoyFin.setHours(23, 59, 59, 999);
+
+    const citas = await this.prisma.cita.findMany({
+      where: {
+        estado: "pendiente",
+        fecha_hora: { gte: hoyInicio, lte: hoyFin },
+        ...(rol === "medico" && { id_medico: id_usuario }),
+      },
+      include: {
+        paciente: { select: { nombre: true, apellidos: true } },
+        medico: { select: { nombre: true } },
+      },
+      orderBy: { fecha_hora: "asc" },
+    });
+
+    return { ok: true, citas };
+  }
 }
