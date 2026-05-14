@@ -56,4 +56,10 @@ export class CitasController {
   citasPendientesHoy(@Request() req: any) {
     return this.citasService.citasPendientesHoy(req.user.id, req.user.rol);
   }
+
+  @Get("stats/duracion-promedio")
+  @Roles("admin", "medico")
+  duracionPromedioPorMedico(@Request() req: any) {
+    return this.citasService.duracionPromedio(req.user.id, req.user.rol);
+  }
 }
