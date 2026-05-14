@@ -56,6 +56,17 @@ export function renderNavbar(paginaActiva: string) {
 `
       : "";
 
+  const linkMetricas =
+    usuario.rol === "admin" || usuario.rol === "medico"
+      ? `
+  <li class="nav-item">
+    <a class="nav-link ${paginaActiva === "metricas" ? "active" : ""}" href="#" data-page="metricas">
+      <i class="bi bi-bar-chart me-1"></i> Métricas
+    </a>
+  </li>
+`
+      : "";
+
   return `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
@@ -72,6 +83,7 @@ export function renderNavbar(paginaActiva: string) {
             ${linkCitas}
             ${linkMisCitas} 
             ${linkHistorial}
+            ${linkMetricas}
           </ul>
           <div class="position-relative">
             <button class="btn btn-light" id="btn-usuario-nav">
@@ -156,5 +168,12 @@ export function initNavbarEvents() {
       window.dispatchEvent(
         new CustomEvent("navigate", { detail: "historial" }),
       );
+    });
+
+  document
+    .querySelector('[data-page="metricas"]')
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("navigate", { detail: "metricas" }));
     });
 }
