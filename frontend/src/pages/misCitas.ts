@@ -1,5 +1,6 @@
 import { Modal } from "bootstrap";
 import { renderNavbar, initNavbarEvents } from "../components/navbar";
+import { getSocket } from "../socket";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -136,6 +137,11 @@ export async function renderMisCitas() {
     });
 
   await cargarMisCitas(token);
+
+  const socket = getSocket();
+
+  socket.off("actualizar-citas");
+  socket.on("actualizar-citas", () => cargarMisCitas(token));
 }
 
 async function cargarMisCitas(token: string) {
