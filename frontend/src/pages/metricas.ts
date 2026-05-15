@@ -1,4 +1,5 @@
 import { renderNavbar, initNavbarEvents } from "../components/navbar";
+import { getSocket } from "../socket";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -83,6 +84,15 @@ export async function renderMetricas() {
   await cargarFinalizadasPorMedico(token);
   await cargarPendientesHoy(token);
   await cargarDuracionPromedio(token);
+
+  const socket = getSocket();
+
+  socket.off("actualizar-citas");
+  socket.on("actualizar-citas", async () => {
+    await cargarFinalizadasPorMedico(token);
+    await cargarPendientesHoy(token);
+    await cargarDuracionPromedio(token);
+  });
 }
 
 async function cargarFinalizadasPorMedico(token: string) {
