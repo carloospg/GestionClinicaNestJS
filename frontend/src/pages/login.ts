@@ -21,9 +21,9 @@ export function renderLogin() {
                   <input type="email" class="form-control" id="email" placeholder="Correo Electronico" required />
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Contrasena</label>
+                  <label class="form-label">Contraseña</label>
                   <div class="input-group">
-                    <input type="password" class="form-control" id="password" placeholder="Contrasena" required />
+                    <input type="password" class="form-control" id="password" placeholder="Contraseña" required />
                     <button class="btn btn-outline-secondary" type="button" id="toggle-password">
                       <i class="bi bi-eye" id="icono-ojo"></i>
                     </button>

@@ -7,10 +7,14 @@ import {
 import { PrismaService } from "../prisma/prisma.service";
 import { CrearCitaDto } from "./dto/crear-cita.dto";
 import { CambiarEstadoDto } from "./dto/cambiar-estado.dto";
+import { EventosService } from "src/eventos/eventos.service";
 
 @Injectable()
 export class CitasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventosService: EventosService,
+  ) {}
 
   async crear(dto: CrearCitaDto) {
     const paciente = await this.prisma.paciente.findUnique({
@@ -39,6 +43,16 @@ export class CitasService {
         estado: "pendiente",
       },
     });
+
+    this.eventosService.emitToRoom(
+      `usuario-${dto.id_medico}`,
+      "cita-asignada",
+      {
+        msg: "Tienes una nueva cita asignada",
+        cita,
+      },
+    );
+    this.eventosService.emit("actualizar-citas", {});
 
     return { ok: true, message: "Cita creada correctamente", cita };
   }
@@ -83,6 +97,18 @@ export class CitasService {
       where: { id },
       data: { estado: "cancelada", updated_at: new Date() },
     });
+
+    this.eventosService.emit("cita-cancelada", {
+      msg: "Una cita ha sido cancelada",
+      cita: citaActualizada,
+    });
+
+    this.eventosService.emitToRoom(
+      `usuario-${cita.id_medico}`,
+      "cita-cancelada-medico",
+      { msg: "Una de tus citas ha sido cancelada" },
+    );
+    this.eventosService.emit("actualizar-citas", {});
 
     return {
       ok: true,
@@ -143,6 +169,16 @@ export class CitasService {
         },
       });
     }
+
+    this.eventosService.emit("cita-estado-cambiado", {
+      msg:
+        dto.estado === "en_curso"
+          ? "Una cita ha comenzado"
+          : "Una cita ha finalizado",
+      estado: dto.estado,
+      cita: citaActualizada,
+    });
+    this.eventosService.emit("actualizar-citas", {});
 
     return {
       ok: true,

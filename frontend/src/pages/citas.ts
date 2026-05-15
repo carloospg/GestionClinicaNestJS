@@ -1,5 +1,7 @@
 import { Modal } from "bootstrap";
 import { renderNavbar, initNavbarEvents } from "../components/navbar";
+import { getSocket } from "../socket";
+import { mostrarNotificacion } from "../components/notificaciones";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -159,6 +161,17 @@ export async function renderCitas() {
     });
 
   await cargarCitas(token);
+
+  const socket = getSocket();
+
+  socket.off("actualizar-citas");
+  socket.off("cita-cancelada");
+
+  socket.on("actualizar-citas", () => cargarCitas(token));
+  socket.on("cita-cancelada", (data) => {
+    mostrarNotificacion(data.msg, "danger");
+    cargarCitas(token);
+  });
 }
 
 async function cargarCitas(token: string) {
